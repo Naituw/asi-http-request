@@ -1000,5 +1000,6 @@ typedef void (^ASIDataBlock)(NSData *data);
 #endif
 @property (retain) ASIDataDecompressor *dataDecompressor;
 @property (assign) BOOL shouldWaitToInflateCompressedResponses;
+@property (assign) NSTimeInterval statusCheckingInterval;
 
 @end

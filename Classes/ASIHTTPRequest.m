@@ -308,6 +308,9 @@ static NSOperationQueue *sharedQueue = nil;
 	[self setURL:newURL];
 	[self setCancelledLock:[[[NSRecursiveLock alloc] init] autorelease]];
 	[self setDownloadCache:[[self class] defaultCache]];
+    
+    [self setStatusCheckingInterval:0.25];
+    
 	return self;
 }
 
@@ -1425,8 +1428,11 @@ static NSOperationQueue *sharedQueue = nil;
 	
 	
 	// Record when the request started, so we can timeout if nothing happens
+    
+    NSTimeInterval checkingInterval = self.statusCheckingInterval ? : 0.25;
+    
 	[self setLastActivityTime:[NSDate date]];
-	[self setStatusTimer:[NSTimer timerWithTimeInterval:0.25 target:self selector:@selector(updateStatus:) userInfo:nil repeats:YES]];
+	[self setStatusTimer:[NSTimer timerWithTimeInterval:checkingInterval target:self selector:@selector(updateStatus:) userInfo:nil repeats:YES]];
 	[[NSRunLoop currentRunLoop] addTimer:[self statusTimer] forMode:[self runLoopMode]];
 }
 
