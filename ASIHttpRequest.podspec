@@ -1,5 +1,5 @@
 Pod::Spec.new do |s|
-  s.name     = 'ASIHTTPRequest'
+  s.name     = 'ASIHttpRequest'
   s.version  = '1.8.2'
   s.summary  = 'Easy to use CFNetwork wrapper for HTTP requests, Objective-C, Mac OS X and iPhone.'
   s.homepage = 'http://allseeing-i.com/ASIHTTPRequest'
