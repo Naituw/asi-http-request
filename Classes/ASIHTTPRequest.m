@@ -408,10 +408,10 @@ static NSOperationQueue *sharedQueue = nil;
 - (void)releaseBlocksOnMainThread
 {
 	NSMutableArray *blocks = [NSMutableArray array];
-	if (completionBlock) {
-		[blocks addObject:completionBlock];
-		[completionBlock release];
-		completionBlock = nil;
+	if (successBlock) {
+		[blocks addObject:successBlock];
+		[successBlock release];
+		successBlock = nil;
 	}
 	if (failureBlock) {
 		[blocks addObject:failureBlock];
@@ -2031,8 +2031,8 @@ static NSOperationQueue *sharedQueue = nil;
 	}
 
 	#if NS_BLOCKS_AVAILABLE
-	if(completionBlock){
-		completionBlock();
+	if(successBlock){
+		successBlock();
 	}
 	#endif
 
@@ -4952,10 +4952,10 @@ static NSOperationQueue *sharedQueue = nil;
 	headersReceivedBlock = [aReceivedBlock copy];
 }
 
-- (void)setCompletionBlock:(ASIBasicBlock)aCompletionBlock
+- (void)setSuccessBlock:(ASIBasicBlock)aSuccessBlock
 {
-	[completionBlock release];
-	completionBlock = [aCompletionBlock copy];
+	[successBlock release];
+	successBlock = [aSuccessBlock copy];
 }
 
 - (void)setFailedBlock:(ASIBasicBlock)aFailedBlock

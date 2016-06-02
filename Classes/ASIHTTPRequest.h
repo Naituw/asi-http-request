@@ -509,7 +509,7 @@ typedef void (^ASIDataBlock)(NSData *data);
 	ASIHeadersBlock headersReceivedBlock;
 
 	//block to execute when request completes successfully
-	ASIBasicBlock completionBlock;
+	ASIBasicBlock successBlock;
 
 	//block to execute when request fails
 	ASIBasicBlock failureBlock;
@@ -554,7 +554,7 @@ typedef void (^ASIDataBlock)(NSData *data);
 #if NS_BLOCKS_AVAILABLE
 - (void)setStartedBlock:(ASIBasicBlock)aStartedBlock;
 - (void)setHeadersReceivedBlock:(ASIHeadersBlock)aReceivedBlock;
-- (void)setCompletionBlock:(ASIBasicBlock)aCompletionBlock;
+- (void)setSuccessBlock:(ASIBasicBlock)aSuccessBlock;
 - (void)setFailedBlock:(ASIBasicBlock)aFailedBlock;
 - (void)setBytesReceivedBlock:(ASIProgressBlock)aBytesReceivedBlock;
 - (void)setBytesSentBlock:(ASIProgressBlock)aBytesSentBlock;
