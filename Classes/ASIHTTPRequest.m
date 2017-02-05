@@ -271,7 +271,6 @@ static NSOperationQueue *sharedQueue = nil;
 		ASITooMuchRedirectionError = [[NSError alloc] initWithDomain:NetworkRequestErrorDomain code:ASITooMuchRedirectionErrorType userInfo:[NSDictionary dictionaryWithObjectsAndKeys:@"The request failed because it redirected too many times",NSLocalizedDescriptionKey,nil]];
 		sharedQueue = [[NSOperationQueue alloc] init];
 		[sharedQueue setMaxConcurrentOperationCount:4];
-
 	}
 }
 
@@ -1132,13 +1131,22 @@ static NSOperationQueue *sharedQueue = nil;
 	}
 }
 
+- (void)_performSyncSelector:(SEL)selector withObject:(id)object
+{
+    if ([self isSynchronous]) {
+        [self performSelector:selector withObject:object];
+    } else {
+        [self performSelectorOnMainThread:selector withObject:object waitUntilDone:[NSThread isMainThread]];
+    }
+}
+
 - (void)startRequest
 {
 	if ([self isCancelled]) {
 		return;
 	}
 	
-	[self performSelectorOnMainThread:@selector(requestStarted) withObject:nil waitUntilDone:[NSThread isMainThread]];
+	[self _performSyncSelector:@selector(requestStarted) withObject:nil];
 	
 	[self setDownloadComplete:NO];
 	[self setComplete:NO];
@@ -1841,7 +1849,7 @@ static NSOperationQueue *sharedQueue = nil;
 #if NS_BLOCKS_AVAILABLE
 - (void)performBlockOnMainThread:(ASIBasicBlock)block
 {
-	[self performSelectorOnMainThread:@selector(callBlock:) withObject:[[block copy] autorelease] waitUntilDone:[NSThread isMainThread]];
+	[self _performSyncSelector:@selector(callBlock:) withObject:[[block copy] autorelease]];
 }
 
 - (void)callBlock:(ASIBasicBlock)block
@@ -1891,7 +1899,7 @@ static NSOperationQueue *sharedQueue = nil;
 		if (callerToRetain) {
 			CFRetain(callerToRetain);
 		}
-        [cbInvocation performSelectorOnMainThread:@selector(invoke) withObject:nil waitUntilDone:[NSThread isMainThread]];
+        [cbInvocation _performSyncSelector:@selector(invoke) withObject:nil];
     }
 }
 
@@ -2019,7 +2027,7 @@ static NSOperationQueue *sharedQueue = nil;
 	if ([self isPACFileRequest]) {
 		[self reportFinished];
 	} else {
-		[self performSelectorOnMainThread:@selector(reportFinished) withObject:nil waitUntilDone:[NSThread isMainThread]];
+		[self _performSyncSelector:@selector(reportFinished) withObject:nil];
 	}
 }
 
@@ -2123,7 +2131,7 @@ static NSOperationQueue *sharedQueue = nil;
 	if ([self isPACFileRequest]) {
 		[failedRequest reportFailure];
 	} else {
-		[failedRequest performSelectorOnMainThread:@selector(reportFailure) withObject:nil waitUntilDone:[NSThread isMainThread]];
+		[failedRequest _performSyncSelector:@selector(reportFailure) withObject:nil];
 	}
 	
     if (!inProgress)
@@ -2304,7 +2312,7 @@ static NSOperationQueue *sharedQueue = nil;
 	}
 
 	CFRelease(message);
-	[self performSelectorOnMainThread:@selector(requestReceivedResponseHeaders:) withObject:[[[self responseHeaders] copy] autorelease] waitUntilDone:[NSThread isMainThread]];
+	[self _performSyncSelector:@selector(requestReceivedResponseHeaders:) withObject:[[[self responseHeaders] copy] autorelease]];
 }
 
 - (BOOL)willRedirect
@@ -2320,7 +2328,7 @@ static NSOperationQueue *sharedQueue = nil;
 		return NO;
 	}
 
-	[self performSelectorOnMainThread:@selector(requestRedirected) withObject:nil waitUntilDone:[NSThread isMainThread]];
+	[self _performSyncSelector:@selector(requestRedirected) withObject:nil];
 
 	// By default, we redirect 301 and 302 response codes as GET requests
 	// According to RFC 2616 this is wrong, but this is what most browsers do, so it's probably what you're expecting to happen
