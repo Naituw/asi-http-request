@@ -467,7 +467,12 @@ static NSOperationQueue *sharedQueue = nil;
 		[requestRedirectedBlock release];
 		requestRedirectedBlock = nil;
 	}
-	[[self class] performSelectorOnMainThread:@selector(releaseBlocks:) withObject:blocks waitUntilDone:[NSThread isMainThread]];
+    
+    if (self.isSynchronous) {
+        [[self class] releaseBlocks:blocks];
+    } else {
+        [[self class] performSelectorOnMainThread:@selector(releaseBlocks:) withObject:blocks waitUntilDone:[NSThread isMainThread]];
+    }
 }
 // Always called on main thread
 + (void)releaseBlocks:(NSArray *)blocks
@@ -3248,7 +3253,7 @@ static NSOperationQueue *sharedQueue = nil;
 	if (needToAskDelegateAboutRedirect) {
 		NSURL *newURL = [[[self redirectURL] copy] autorelease];
 		[self setRedirectURL:nil];
-		[self performSelectorOnMainThread:@selector(requestWillRedirectToURL:) withObject:newURL waitUntilDone:[NSThread isMainThread]];
+		[self _performSyncSelector:@selector(requestWillRedirectToURL:) withObject:newURL];
 		return true;
 	}
 	return false;
@@ -3354,7 +3359,7 @@ static NSOperationQueue *sharedQueue = nil;
 			} else {
 				data = [NSData dataWithBytes:buffer length:bytesRead];
 			}
-			[self performSelectorOnMainThread:@selector(passOnReceivedData:) withObject:data waitUntilDone:[NSThread isMainThread]];
+			[self _performSyncSelector:@selector(passOnReceivedData:) withObject:data];
 			
 		// Are we downloading to a file?
 		} else if ([self downloadDestinationPath]) {
