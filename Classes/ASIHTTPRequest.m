@@ -720,7 +720,7 @@ static NSOperationQueue *sharedQueue = nil;
 	[self failWithError:ASIRequestCancelledError];
 	[self setComplete:YES];
 	[self cancelLoad];
-	
+
 	CFRetain(self);
     [self willChangeValueForKey:@"isCancelled"];
     cancelled = YES;
@@ -732,7 +732,11 @@ static NSOperationQueue *sharedQueue = nil;
 
 - (void)cancel
 {
-    [self performSelector:@selector(cancelOnRequestThread) onThread:[[self class] threadForRequest:self] withObject:nil waitUntilDone:NO];    
+    if (self.isSynchronous) {
+        [self cancelOnRequestThread];
+    } else {
+        [self performSelector:@selector(cancelOnRequestThread) onThread:[[self class] threadForRequest:self] withObject:nil waitUntilDone:NO];
+    }
 }
 
 - (void)clearDelegatesAndCancel
@@ -2057,19 +2061,21 @@ static NSOperationQueue *sharedQueue = nil;
 /* ALWAYS CALLED ON MAIN THREAD! */
 - (void)reportFailure
 {
-	if (delegate && [delegate respondsToSelector:didFailSelector]) {
-		[delegate performSelector:didFailSelector withObject:self];
-	}
-
-	#if NS_BLOCKS_AVAILABLE
-    if(failureBlock){
-        failureBlock();
-    }
-	#endif
-
-	if (queue && [queue respondsToSelector:@selector(requestFailed:)]) {
-		[queue performSelector:@selector(requestFailed:) withObject:self];
-	}
+    [self _performWithCancelledLockIfSync:^(ASIHTTPRequest * request) {
+        if (delegate && [delegate respondsToSelector:didFailSelector]) {
+            [delegate performSelector:didFailSelector withObject:self];
+        }
+        
+#if NS_BLOCKS_AVAILABLE
+        if(failureBlock){
+            failureBlock();
+        }
+#endif
+        
+        if (queue && [queue respondsToSelector:@selector(requestFailed:)]) {
+            [queue performSelector:@selector(requestFailed:) withObject:self];
+        }
+    }];
 }
 
 /* ALWAYS CALLED ON MAIN THREAD! */
@@ -2084,6 +2090,30 @@ static NSOperationQueue *sharedQueue = nil;
 		dataReceivedBlock(data);
 	}
 	#endif
+}
+
+- (void)_performWithCancelledLockIfSync:(void (^)(ASIHTTPRequest * request))block
+{
+    if (!block) {
+        return;
+    }
+    
+    if (self.isSynchronous) {
+        [self performWithCancelledLock:block];
+    } else {
+        block(self);
+    }
+}
+
+- (void)performWithCancelledLock:(void (^)(ASIHTTPRequest * request))block
+{
+    if (!block) {
+        return;
+    }
+    
+    [[self cancelledLock] lock];
+    block(self);
+    [[self cancelledLock] unlock];
 }
 
 // Subclasses might override this method to perform error handling in the same thread

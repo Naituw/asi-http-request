@@ -1002,4 +1002,8 @@ typedef void (^ASIDataBlock)(NSData *data);
 @property (assign) BOOL shouldWaitToInflateCompressedResponses;
 @property (assign) NSTimeInterval statusCheckingInterval;
 
+- (void)releaseBlocksOnMainThread;
+
+- (void)performWithCancelledLock:(void (^)(ASIHTTPRequest * request))block;
+
 @end
