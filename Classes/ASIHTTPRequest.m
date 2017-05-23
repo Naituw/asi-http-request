@@ -245,7 +245,7 @@ static NSOperationQueue *sharedQueue = nil;
 @property (retain, nonatomic) NSInputStream *PACFileReadStream;
 @property (retain, nonatomic) NSMutableData *PACFileData;
 
-@property (assign, nonatomic, setter=setSynchronous:) BOOL isSynchronous;
+@property (assign, atomic, setter=setSynchronous:) BOOL isSynchronous;
 @end
 
 
@@ -810,7 +810,7 @@ static NSOperationQueue *sharedQueue = nil;
 
 	if (![self isCancelled] && ![self complete]) {
 		[self main];
-		while (!complete) {
+		while (!self.complete) {
 			[[NSRunLoop currentRunLoop] runMode:[self runLoopMode] beforeDate:[NSDate distantFuture]];
 		}
 	}
@@ -2169,7 +2169,7 @@ static NSOperationQueue *sharedQueue = nil;
 		[failedRequest _performSyncSelector:@selector(reportFailure) withObject:nil];
 	}
 	
-    if (!inProgress)
+    if (!self.inProgress)
     {
         // if we're not in progress, we can't notify the queue we've finished (doing so can cause a crash later on)
         // "markAsFinished" will be at the start of main() when we are started
@@ -3588,8 +3588,8 @@ static NSOperationQueue *sharedQueue = nil;
 		proxyAuthentication = nil;
 	}
 
-    BOOL wasInProgress = inProgress;
-    BOOL wasFinished = finished;
+    BOOL wasInProgress = self.inProgress;
+    BOOL wasFinished = self.isFinished;
 
     if (!wasFinished)
         [self willChangeValueForKey:@"isFinished"];
